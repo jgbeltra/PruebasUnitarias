@@ -24,8 +24,12 @@ public class PersonaService {
         return "Hola, soy " + persona.getNombre() + " " + persona.getApelido() + " de edad: " + persona.getEdad();
     }
 
+    protected int getActualYear (){
+        return LocalDate.now().getYear();
+    }
+
     public int calcularAnioNacimiento(int edad) throws Exception {
-        int anioActual = LocalDate.now().getYear();
+        int anioActual = getActualYear();
 
         if (edad > anioActual) {
             throw new Exception("la edad es invalida por favor verifique");
