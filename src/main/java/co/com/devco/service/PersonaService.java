@@ -2,27 +2,23 @@ package co.com.devco.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
+import co.com.devco.model.Control;
 import co.com.devco.model.EtapaVida;
 import co.com.devco.model.Persona;
+import org.apache.logging.log4j.Logger;
 import org.springframework.util.StringUtils;
 
 public class PersonaService {
 
-    private static String[] actividadesInfancia = {"Correr", "Saltar", "Ir a piscina", "Llorar"};
-    private static String[] actividadesJoven = {"Correr", "Saltar", "Ir a piscina", "Estudia en colegio", "Escucha musica"};
-    private static String[] actividadesAdolescencia = {"Estudia en universidad", "Sale de compras", "Apuesta"};
-    private static String[] actividadesJuevntud = {"Estudia en universidad", "Trabaja", "Sale a comer con amigos"};
-    private static String[] actividadesAdulto = {"Programa", "Enferma", "Cuida su familia"};
-    private static String[] actividadesAnciano = {"Sale a la playa", "Compra bienes", "Cuida su nietos"};
+    private Logger logger;
+
 
     public String presentarPersona(Persona persona) throws Exception {
 
         if (persona == null) {
-            throw new NullPointerException("persona no valida");
+            throw new Exception("persona no valida");
         }
         if (StringUtils.isEmpty(persona.getNombre())) {
             throw new Exception("el nombre de la persona es requerido");
@@ -36,8 +32,12 @@ public class PersonaService {
         return "Hola, soy " + persona.getNombre() + " " + persona.getApelido() + " de edad: " + persona.getEdad();
     }
 
+    protected static int obtenerAnioActual() {
+        return LocalDate.now().getYear();
+    }
+
     public int calcularAnioNacimiento(int edad) throws Exception {
-        int anioActual = LocalDate.now().getYear();
+        int anioActual = obtenerAnioActual();
 
         if (edad > anioActual) {
             throw new Exception("la edad es invalida por favor verifique");
@@ -57,42 +57,52 @@ public class PersonaService {
         return lista;
     }
 
+    //Pruebas con powermock
     public String[] obtenerActividadesPorEdad(int edad) {
-        EtapaVida etapaAux = obtenerEtapaDeVida(edad);
+        EtapaVida etapaAux = EtapaService.obtenerEtapaDeVida(edad);
         if (etapaAux != null) {
-            return obtenerActividades(etapaAux);
+            return ActividadService.obtenerActividades(etapaAux);
         } else {
             return null;
         }
     }
-
-    protected EtapaVida obtenerEtapaDeVida(int edad) {
-        return Optional.ofNullable(EtapaVida.values())
-                .map(etapaVidas -> {
-                    return Arrays.stream(etapaVidas)
-                            .filter(etapa -> edad >= etapa.getInicio() && edad <= etapa.getFin())
-                            .findFirst()
-                            .orElse(null);
-                }).orElse(null);
+    //Argument Captor
+    public int calcularSalario(int salarioBasicoDia) {
+        int salarioBasicoMes = calcularSalarioMes(salarioBasicoDia);
+        int salarioAnual = calcularSalarioAnual(salarioBasicoMes);
+        return salarioAnual;
     }
 
-    protected String[] obtenerActividades(EtapaVida etapaVida) {
-        switch (etapaVida) {
-            case INFANCIA:
-                return actividadesInfancia;
-            case JOVEN:
-                return actividadesJoven;
-            case ADOLESCENCIA:
-                return actividadesAdolescencia;
-            case JUVENTUD:
-                return actividadesJuevntud;
-            case ADULTO:
-                return actividadesAdulto;
-            case ANCIANO:
-                return actividadesAnciano;
-            default:
-                return null;
+    protected int calcularSalarioMes(int salarioBasicoDia) {
+        return salarioBasicoDia * 30;
+    }
+
+    protected int calcularSalarioAnual(int salarioBasicoMes) {
+        return salarioBasicoMes * 12;
+    }
+
+
+    //Dynamic response
+    public void guardarPersona(String nombre, String apellido) {
+        Persona persona = Persona.builder().nombre(nombre).apelido(apellido).build();
+        establecerEdad(persona);
+        logger.info("la edad de la persona es {}", persona.getEdad());
+    }
+
+
+    public void establecerEdad(Persona persona) {
+
+        persona.setEdad(30);
+    }
+
+    public static Control obtenerInicializacionDePersona(){
+        System.out.print("hola");
+        try{
+            return new Control("1234", null);
+        }catch (Exception ex){
+            System.out.print("fallo");
         }
+        return null;
     }
 
 
